@@ -33,7 +33,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.enemyCooldown--;
         this.fallTimer--;
 
-        let scene = this.parentScene;
         if (this.active) {
             if (this.x < (this.origin - 80) || this.x > (this.origin + 80))
                 this.enemySpeed = -(this.enemySpeed);
@@ -42,18 +41,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
             if (this.fallTimer <= 0) {
                 this.fallTimer = this.fallReset;
                 this.y += this.fallSpeed;
-            }
-        }
-        for (let laser of scene.my.sprite.laserGroup.getChildren()) {
-            if (this.visible == true && scene.collides(this, laser)) {
-                this.y = laser.y = -100;
-                this.makeInactive();
-                laser.makeInactive();
-                if (this instanceof Cruiser)
-                    scene.playerScore += 25;
-                if (this instanceof Bomber)
-                    scene.playerScore += 50;
-                scene.sound.play("boom");
             }
         }
     }
@@ -76,6 +63,20 @@ class Enemy extends Phaser.GameObjects.Sprite {
 }
 
 class Cruiser extends Enemy {
+    update() {
+        super.update();
+
+        let scene = this.parentScene;
+        for (let laser of scene.my.sprite.enemyLaserGroup.getChildren()) {
+            if (scene.collides(scene.my.sprite.player, laser)) {
+                laser.y = -100;
+                laser.makeInactive();
+                scene.playerHealth--;
+                scene.sound.play("ouch");
+            }
+        }
+    }
+
     performAction() {
         let scene = this.parentScene;
         if (this.enemyCooldown <= 0) {
@@ -90,45 +91,12 @@ class Cruiser extends Enemy {
         }
     }
 
-    update() {
-        super.update();
-
-        let scene = this.parentScene;
-        for (let laser of scene.my.sprite.enemyLaserGroup.getChildren()) {
-            if (scene.collides(scene.my.sprite.player, laser)) {
-                laser.y = -100;
-                laser.makeInactive();
-                scene.playerHealth--;
-                scene.sound.play("ouch");
-            }
-        }
+    givePoints(scene) {
+        scene.playerScore += 25;
     }
 }
 
 class Bomber extends Enemy {
-    performAction() {
-        let scene = this.parentScene;
-        if (this.enemyCooldown <= 0) {
-            this.visible = false;
-            this.points = [
-                this.x, this.y,
-                this.x - 200, this.y + 250,
-                this.x + 200, this.y + 500,
-                this.x - 200, this.y + 750
-            ];
-            this.curve = new Phaser.Curves.Spline(this.points);
-
-            this.diveBomber = scene.add.follower(this.curve, 10, 10, "bomber");
-            this.diveBomber.setScale(0.5);
-            this.diveBomber.x = this.curve.points[0].x;
-            this.diveBomber.y = this.curve.points[0].y;
-            this.diveBomber.startFollow(this.followerConfig);
-
-            scene.sound.play("shooom");
-            this.enemyCooldown = Math.floor(Math.random() * 100) + 150;
-        }
-    }
-
     update() {
         super.update();
 
@@ -158,8 +126,35 @@ class Bomber extends Enemy {
         }
     }
 
+    performAction() {
+        let scene = this.parentScene;
+        if (this.enemyCooldown <= 0) {
+            this.visible = false;
+            this.points = [
+                this.x, this.y,
+                this.x - 200, this.y + 250,
+                this.x + 200, this.y + 500,
+                this.x - 200, this.y + 750
+            ];
+            this.curve = new Phaser.Curves.Spline(this.points);
+
+            this.diveBomber = scene.add.follower(this.curve, 10, 10, "bomber");
+            this.diveBomber.setScale(0.5);
+            this.diveBomber.x = this.curve.points[0].x;
+            this.diveBomber.y = this.curve.points[0].y;
+            this.diveBomber.startFollow(this.followerConfig);
+
+            scene.sound.play("shooom");
+            this.enemyCooldown = Math.floor(Math.random() * 100) + 150;
+        }
+    }
+
     destroyBomber(diveBomber) {
         diveBomber.destroy();
         this.diveBomber = null;
+    }
+
+    givePoints(scene) {
+        scene.playerScore += 50;
     }
 }

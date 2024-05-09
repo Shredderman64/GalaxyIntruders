@@ -2,6 +2,8 @@ class Gallery extends Phaser.Scene {
     constructor() {
         super("galleryScreen");
 
+        this.my = {sprite: {}};
+        
         this.laserSpeed = 10;
         this.laserCooldown = 25;
         this.laserReady = 0;
@@ -120,6 +122,7 @@ class Gallery extends Phaser.Scene {
             this.newWave = true;
         }
         if (this.newWave == true) {
+            this.columns = [[], [], []];
             my.sprite.enemyGroup.propertyValueSet("enemySpeed", this.enemySpeed);
             for (let enemyY = 300; enemyY >= 100; enemyY -= 100) {
                 for (let enemyX = 150; enemyX <= 450; enemyX += 150) {
@@ -154,32 +157,43 @@ class Gallery extends Phaser.Scene {
             }
         }
 
-        // laser mechanics
-        if (this.space.isDown && this.laserReady <= 0 && my.sprite.player.active) {
-            let laser = my.sprite.laserGroup.getFirstDead();
-            if (laser != null) {
-                this.laserReady = this.laserCooldown;
-                laser.makeActive();
-                laser.x = my.sprite.player.x;
-                laser.y = my.sprite.player.y - (my.sprite.player.displayHeight / 2);
-                this.sound.play("pew");
+        if (!this.gameOver) {
+            // laser mechanics
+            if (this.space.isDown && this.laserReady <= 0) {
+                let laser = my.sprite.laserGroup.getFirstDead();
+                if (laser != null) {
+                    this.laserReady = this.laserCooldown;
+                    laser.makeActive();
+                    laser.x = my.sprite.player.x;
+                    laser.y = my.sprite.player.y - (my.sprite.player.displayHeight / 2);
+                    this.sound.play("pew");
+                }
             }
-        }
-
-        // game over
-        for (let enemy of my.sprite.enemyGroup.getChildren()) {
-            if ((enemy.y >= (my.sprite.player.y - my.sprite.player.displayHeight / 2) 
-                || this.playerHealth == 0) && !this.gameOver) {
-                my.sprite.player.makeInactive();
-                my.sprite.enemyGroup.setActive(false);
-                my.sprite.laserGroup.setActive(false).setVisible(false);
-                this.sound.play("death");
-                this.add.bitmapText(game.config.width / 2, game.config.height / 2, "pixel_square",
-                "game over", 32).setOrigin(0.5)
-                this.add.bitmapText(game.config.width / 2, (game.config.height / 2) + 30, "pixel_square", 
-                "Press R to return to menu", 20).setOrigin(0.5);
-                this.gameOver = true;
-                break;
+            for (let enemy of my.sprite.enemyGroup.getChildren()) {
+                // enemy collision
+                for (let laser of this.my.sprite.laserGroup.getChildren()) {
+                    if (enemy.visible == true && this.collides(enemy, laser)) {
+                        enemy.y = laser.y = -100;
+                        enemy.makeInactive();
+                        laser.makeInactive();
+                        enemy.givePoints(this);
+                        this.sound.play("boom");
+                    }
+                }
+                // game over
+                if ((enemy.y >= (my.sprite.player.y - my.sprite.player.displayHeight / 2)
+                    || this.playerHealth == 0)) {
+                    my.sprite.player.makeInactive();
+                    my.sprite.enemyGroup.setActive(false);
+                    my.sprite.laserGroup.setActive(false).setVisible(false);
+                    this.sound.play("death");
+                    this.add.bitmapText(game.config.width / 2, game.config.height / 2, "pixel_square",
+                    "game over", 32).setOrigin(0.5)
+                    this.add.bitmapText(game.config.width / 2, (game.config.height / 2) + 30, "pixel_square", 
+                    "Press R to return to menu", 20).setOrigin(0.5);
+                    this.gameOver = true;
+                    break;
+                }
             }
         }
 
@@ -198,11 +212,9 @@ class Gallery extends Phaser.Scene {
     }
 
     init_game() {
-        this.my = {sprite: {}};
         this.playerHealth = 3;
         this.playerScore = 0;
 
-        this.columns = [[], [], []];
         this.newWave = false;
 
         this.gameOver = false;
