@@ -112,9 +112,9 @@ class Bomber extends Enemy {
             this.visible = false;
             this.points = [
                 this.x, this.y,
-                this.x - 100, this.y + 250,
-                this.x + 100, this.y + 500,
-                this.x - 100, this.y + 750
+                this.x - 200, this.y + 250,
+                this.x + 200, this.y + 500,
+                this.x - 200, this.y + 750
             ];
             this.curve = new Phaser.Curves.Spline(this.points);
 
