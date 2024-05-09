@@ -14,7 +14,7 @@ class Title extends Phaser.Scene {
         this.add.bitmapText(game.config.width / 2, game.config.height / 2 - 100, "pixel_square",
         "Galaxy Intruders", 32).setOrigin(0.5);
         this.add.bitmapText(game.config.width / 2, game.config.height / 2, "pixel_square",
-        "Left and right arrows to move", 20).setOrigin(0.5);
+        "A and D to move", 20).setOrigin(0.5);
         this.add.bitmapText(game.config.width / 2, game.config.height / 2 + 20, "pixel_square",
         "Space to fire", 20).setOrigin(0.5);
         this.add.bitmapText(game.config.width / 2, game.config.height / 2 + 60, "pixel_square",
