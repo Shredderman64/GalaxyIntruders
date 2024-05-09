@@ -187,6 +187,7 @@ class Gallery extends Phaser.Scene {
                     my.sprite.enemyGroup.setActive(false);
                     my.sprite.laserGroup.setActive(false).setVisible(false);
                     this.sound.play("death");
+                    
                     this.add.bitmapText(game.config.width / 2, game.config.height / 2, "pixel_square",
                     "game over", 32).setOrigin(0.5)
                     this.add.bitmapText(game.config.width / 2, (game.config.height / 2) + 30, "pixel_square", 
